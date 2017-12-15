@@ -7,19 +7,19 @@ import com.bulingzhuang.opengltest.shape.base.BaseShape
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import java.nio.ShortBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+
 
 /**
  * ================================================
  * 作    者：bulingzhuang
  * 邮    箱：bulingzhuang@foxmail.com
  * 创建日期：2017/12/13
- * 描    述：练习四，六边形
+ * 描    述：练习六，定点法圆形
  * ================================================
  */
-class Hexagon(mView: View) : BaseShape(mView) {
+class Circle(mView: View) : BaseShape(mView) {
 
     companion object {
         private val vertexShaderCode = "attribute vec4 vPosition;" +
@@ -35,42 +35,56 @@ class Hexagon(mView: View) : BaseShape(mView) {
                 "void main() {" +
                 "  gl_FragColor = vColor;" +
                 "}"
-        //        private val triangleCoords = floatArrayOf(
-//                -0.5f, 0.5f, 0.0f, // top left
-//                -0.5f, -0.5f, 0.0f, // bottom left
-//                0.5f, -0.5f, 0.0f, // bottom right
-//                0.5f, 0.5f, 0.0f  // top right
+        //        private val radius = (Math.sqrt(3.0) / 2).toFloat()
+//        private val triangleCoords = floatArrayOf(
+//                0f, 0f, 0.0f,
+//                0f, 1f, 0.0f,
+//                -radius, 0.5f, 0.0f,
+//                -radius, -0.5f, 0.0f,
+//                0f, -1f, 0.0f,
+//                radius, -0.5f, 0.0f,
+//                radius, 0.5f, 0.0f
 //        )
-        private val radius = (Math.sqrt(3.0) / 2).toFloat()
-        private val triangleCoords = floatArrayOf(
-                0f, 0f, 0.0f,
-                0f, 1f, 0.0f,
-                -radius, 0.5f, 0.0f,
-                -radius, -0.5f, 0.0f,
-                0f, -1f, 0.0f,
-                radius, -0.5f, 0.0f,
-                radius, 0.5f, 0.0f
-        )
-        private val index = shortArrayOf(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1)
+//        private val triangleCoords = floatArrayOf(
+//                0f, 0f, 0.0f,
+//                mathCos(90.0), mathSin(90.0), 0.0f,
+//                mathCos(135.0), mathSin(135.0), 0.0f,
+//                mathCos(180.0), mathSin(180.0), 0.0f,
+//                mathCos(225.0), mathSin(225.0), 0.0f,
+//                mathCos(270.0), mathSin(270.0), 0.0f,
+//                mathCos(315.0), mathSin(315.0), 0.0f,
+//                mathCos(360.0), mathSin(360.0), 0.0f,
+//                mathCos(405.0), mathSin(405.0), 0.0f
+//        )
+
+        private fun mathSin(angle: Double): Float {
+            return Math.sin(Math.PI / 180 * angle).toFloat()
+        }
+
+        private fun mathCos(angle: Double): Float {
+            return Math.cos(Math.PI / 180 * angle).toFloat()
+        }
+
+        //        private val index = shortArrayOf(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 1)
         private val COORDS_PER_VERTEX = 3
-        //顶点个数
-        private val vertexCount = triangleCoords.size / COORDS_PER_VERTEX
         //顶点之间的偏移量
         private val vertexStride = COORDS_PER_VERTEX * 4 // 每个顶点四个字节
         //设置颜色
-        private val color = floatArrayOf(
-                0.0f, 1.0f, 0.0f, 1.0f,//绿
-                1.0f, 0.0f, 0.0f, 1.0f,//红
-                0.0f, 0.0f, 1.0f, 1.0f,//蓝
-                1.0f, 0.0f, 0.0f, 1.0f,//红
-                0.0f, 0.0f, 1.0f, 1.0f,//蓝
-                1.0f, 0.0f, 0.0f, 1.0f,//红
-                0.0f, 0.0f, 1.0f, 1.0f)
+//        private val color = floatArrayOf(
+//                0.0f, 1.0f, 0.0f, 1.0f,//绿
+//                1.0f, 0.0f, 0.0f, 1.0f,//红
+//                0.0f, 0.0f, 1.0f, 1.0f,//蓝
+//                1.0f, 0.0f, 0.0f, 1.0f,//红
+//                0.0f, 0.0f, 1.0f, 1.0f,//蓝
+//                1.0f, 0.0f, 0.0f, 1.0f,//红
+//                0.0f, 0.0f, 1.0f, 1.0f,//蓝
+//                1.0f, 0.0f, 0.0f, 1.0f,//红
+//                0.0f, 0.0f, 1.0f, 1.0f)
     }
 
     private val vertexBuffer: FloatBuffer
     private val colorBuffer: FloatBuffer
-    private val indexBuffer: ShortBuffer
+//    private val indexBuffer: ShortBuffer
     private val mViewMatrix = FloatArray(16)
     private val mProjectMatrix = FloatArray(16)
     private val mMVPMatrix = FloatArray(16)
@@ -79,22 +93,61 @@ class Hexagon(mView: View) : BaseShape(mView) {
     private var mPositionHandle = 0
     private var mColorHandle = 0
 
+    private lateinit var triangleCoords: FloatArray
+    private lateinit var color: FloatArray
+
     init {
+        create(16384)
         val bb = ByteBuffer.allocateDirect(triangleCoords.size * 4)
         bb.order(ByteOrder.nativeOrder())
         vertexBuffer = bb.asFloatBuffer()
         vertexBuffer.put(triangleCoords)
         vertexBuffer.position(0)
-        val cc = ByteBuffer.allocateDirect(index.size * 2)
-        cc.order(ByteOrder.nativeOrder())
-        indexBuffer = cc.asShortBuffer()
-        indexBuffer.put(index)
-        indexBuffer.position(0)
+//        val cc = ByteBuffer.allocateDirect(index.size * 2)
+//        cc.order(ByteOrder.nativeOrder())
+//        indexBuffer = cc.asShortBuffer()
+//        indexBuffer.put(index)
+//        indexBuffer.position(0)
         val dd = ByteBuffer.allocateDirect(color.size * 4)
         dd.order(ByteOrder.nativeOrder())
         colorBuffer = dd.asFloatBuffer()
         colorBuffer.put(color)
         colorBuffer.position(0)
+    }
+
+    private fun create(count: Int) {
+        val vertexList = ArrayList<Float>()
+        vertexList.add(0f)
+        vertexList.add(0f)
+        vertexList.add(0f)
+        val angle = 360f / count
+        var i = 0f
+        while (i < 360 + angle) {
+            vertexList.add(Math.sin(i * Math.PI / 180f).toFloat())
+            vertexList.add(Math.cos(i * Math.PI / 180f).toFloat())
+            vertexList.add(0.0f)
+            i += angle
+        }
+        triangleCoords = vertexList.toFloatArray()
+        val colorList = ArrayList<Float>()
+        colorList.add(0f)
+        colorList.add(1f)
+        colorList.add(0f)
+        colorList.add(1f)
+        for (position in 0..count) {
+            if (position % 2 == 0) {
+                colorList.add(1f)
+                colorList.add(0f)
+                colorList.add(0f)
+                colorList.add(1f)
+            } else {
+                colorList.add(0f)
+                colorList.add(0f)
+                colorList.add(1f)
+                colorList.add(1f)
+            }
+        }
+        color = colorList.toFloatArray()
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -117,8 +170,9 @@ class Hexagon(mView: View) : BaseShape(mView) {
         GLES20.glVertexAttribPointer(mColorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer)
 //        //绘制三角形
 //        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN,0,triangleCoords.size/3)
         //索引法绘制正方形
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, index.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
+//        GLES20.glDrawElements(GLES20.GL_TRIANGLES, index.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
         //禁止顶点数组句柄
         GLES20.glDisableVertexAttribArray(mPositionHandle)
     }

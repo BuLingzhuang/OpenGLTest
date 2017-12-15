@@ -42,15 +42,12 @@ class Square(mView: View) : BaseShape(mView) {
 //                0.5f, 0.5f, 0.0f  // top right
 //        )
         private val triangleCoords = floatArrayOf(
-                0f, 0f, 0.0f,
-                0f, 1f, 0.0f,
-                -1f, 0.5f, 0.0f,
-                -1f, -0.5f, 0.0f,
-                0f, -1f, 0.0f,
-                1f, -0.5f, 0.0f,
-                1f, 0.5f, 0.0f
+                -0.5f, -0.5f, 0.0f,
+                -0.5f, 0.5f, 0.0f,
+                0.5f, 0.5f, 0.0f,
+                0.5f, -0.5f, 0.0f
         )
-        private val index = shortArrayOf(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1)
+        private val index = shortArrayOf(0, 1, 2, 0, 2, 3)
         private val COORDS_PER_VERTEX = 3
         //顶点个数
         private val vertexCount = triangleCoords.size / COORDS_PER_VERTEX
@@ -61,10 +58,7 @@ class Square(mView: View) : BaseShape(mView) {
                 0.0f, 1.0f, 0.0f, 1.0f,//绿
                 1.0f, 0.0f, 0.0f, 1.0f,//红
                 0.0f, 0.0f, 1.0f, 1.0f,//蓝
-                1.0f, 0.0f, 0.0f, 1.0f,//红
-                0.0f, 0.0f, 1.0f, 1.0f,//蓝
-                1.0f, 0.0f, 0.0f, 1.0f,//红
-                0.0f, 0.0f, 1.0f, 1.0f)
+                1.0f, 0.0f, 0.0f, 1.0f)
     }
 
     private val vertexBuffer: FloatBuffer

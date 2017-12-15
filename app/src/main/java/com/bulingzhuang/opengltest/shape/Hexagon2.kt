@@ -16,10 +16,10 @@ import javax.microedition.khronos.opengles.GL10
  * 作    者：bulingzhuang
  * 邮    箱：bulingzhuang@foxmail.com
  * 创建日期：2017/12/13
- * 描    述：练习四，六边形
+ * 描    述：练习五，索引法多边形
  * ================================================
  */
-class Hexagon(mView: View) : BaseShape(mView) {
+class Hexagon2(mView: View) : BaseShape(mView) {
 
     companion object {
         private val vertexShaderCode = "attribute vec4 vPosition;" +
@@ -35,31 +35,45 @@ class Hexagon(mView: View) : BaseShape(mView) {
                 "void main() {" +
                 "  gl_FragColor = vColor;" +
                 "}"
-        //        private val triangleCoords = floatArrayOf(
-//                -0.5f, 0.5f, 0.0f, // top left
-//                -0.5f, -0.5f, 0.0f, // bottom left
-//                0.5f, -0.5f, 0.0f, // bottom right
-//                0.5f, 0.5f, 0.0f  // top right
+        //        private val radius = (Math.sqrt(3.0) / 2).toFloat()
+//        private val triangleCoords = floatArrayOf(
+//                0f, 0f, 0.0f,
+//                0f, 1f, 0.0f,
+//                -radius, 0.5f, 0.0f,
+//                -radius, -0.5f, 0.0f,
+//                0f, -1f, 0.0f,
+//                radius, -0.5f, 0.0f,
+//                radius, 0.5f, 0.0f
 //        )
-        private val radius = (Math.sqrt(3.0) / 2).toFloat()
         private val triangleCoords = floatArrayOf(
                 0f, 0f, 0.0f,
-                0f, 1f, 0.0f,
-                -radius, 0.5f, 0.0f,
-                -radius, -0.5f, 0.0f,
-                0f, -1f, 0.0f,
-                radius, -0.5f, 0.0f,
-                radius, 0.5f, 0.0f
+                mathCos(90.0), mathSin(90.0), 0.0f,
+                mathCos(135.0), mathSin(135.0), 0.0f,
+                mathCos(180.0), mathSin(180.0), 0.0f,
+                mathCos(225.0), mathSin(225.0), 0.0f,
+                mathCos(270.0), mathSin(270.0), 0.0f,
+                mathCos(315.0), mathSin(315.0), 0.0f,
+                mathCos(360.0), mathSin(360.0), 0.0f,
+                mathCos(405.0), mathSin(405.0), 0.0f
         )
-        private val index = shortArrayOf(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1)
+
+        private fun mathSin(angle: Double): Float {
+            return Math.sin(Math.PI / 180 * angle).toFloat()
+        }
+
+        private fun mathCos(angle: Double): Float {
+            return Math.cos(Math.PI / 180 * angle).toFloat()
+        }
+
+        private val index = shortArrayOf(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 1)
         private val COORDS_PER_VERTEX = 3
-        //顶点个数
-        private val vertexCount = triangleCoords.size / COORDS_PER_VERTEX
         //顶点之间的偏移量
         private val vertexStride = COORDS_PER_VERTEX * 4 // 每个顶点四个字节
         //设置颜色
         private val color = floatArrayOf(
                 0.0f, 1.0f, 0.0f, 1.0f,//绿
+                1.0f, 0.0f, 0.0f, 1.0f,//红
+                0.0f, 0.0f, 1.0f, 1.0f,//蓝
                 1.0f, 0.0f, 0.0f, 1.0f,//红
                 0.0f, 0.0f, 1.0f, 1.0f,//蓝
                 1.0f, 0.0f, 0.0f, 1.0f,//红
