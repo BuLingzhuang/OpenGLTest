@@ -2,103 +2,129 @@ package com.bulingzhuang.opengltest.shape
 
 import android.opengl.GLES20
 import android.opengl.Matrix
+import android.util.Log
 import android.view.View
 import com.bulingzhuang.opengltest.shape.base.BaseShape
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import java.nio.ShortBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+
 
 /**
  * ================================================
  * 作    者：bulingzhuang
  * 邮    箱：bulingzhuang@foxmail.com
- * 创建日期：2017/12/14
- * 描    述：练习七，立方体
+ * 创建日期：2017/12/13
+ * 描    述：练习十，球
  * ================================================
  */
-class Cube(mView: View) : BaseShape(mView) {
+class Sphere(mView: View) : BaseShape(mView) {
+
     companion object {
-        private val cubePositions = floatArrayOf(-1.0f, 1.0f, 1.0f, //正面左上0
-                -1.0f, -1.0f, 1.0f, //正面左下1
-                1.0f, -1.0f, 1.0f, //正面右下2
-                1.0f, 1.0f, 1.0f, //正面右上3
-                -1.0f, 1.0f, -1.0f, //反面左上4
-                -1.0f, -1.0f, -1.0f, //反面左下5
-                1.0f, -1.0f, -1.0f, //反面右下6
-                1.0f, 1.0f, -1.0f)//反面右上7
-
-        //索引数组
-        private val index = shortArrayOf(6, 7, 4, 6, 4, 5, //后面
-                6, 3, 7, 6, 2, 3, //右面
-                6, 5, 1, 6, 1, 2, //下面
-                0, 3, 2, 0, 2, 1, //正面
-                0, 1, 5, 0, 5, 4, //左面
-                0, 7, 3, 0, 4, 7)//上面
-
-        //八个顶点的颜色，与顶点坐标一一对应
-        private val color = floatArrayOf(
-                0f, 1f, 0f, 1f,
-                0f, 1f, 0f, 1f,
-                0f, 1f, 0f, 1f,
-                0f, 1f, 0f, 1f,
-                1f, 0f, 0f, 1f,
-                1f, 0f, 0f, 1f,
-                1f, 0f, 0f, 1f,
-                1f, 0f, 0f, 1f)
-
         private val vertexShaderCode = "attribute vec4 vPosition;" +
                 "uniform mat4 vMatrix;" +
                 "varying  vec4 vColor;" +
                 "attribute vec4 aColor;" +
                 "void main() {" +
                 "  gl_Position = vMatrix*vPosition;" +
-                "  vColor=aColor;" +
+                "  float color;" +
+                "  if(vPosition.z>0.0){" +
+                "        color=vPosition.z;" +
+                "    }else{" +
+                "        color=-vPosition.z;" +
+                "    }" +
+                "    vColor=vec4(color,0.58823+color*0.16863,0.53333-color*0.50583,1.0);" +
                 "}"
         private val fragmentShaderCode = "precision mediump float;" +
                 "varying vec4 vColor;" +
                 "void main() {" +
                 "  gl_FragColor = vColor;" +
                 "}"
+
         private val COORDS_PER_VERTEX = 3
         //顶点之间的偏移量
         private val vertexStride = COORDS_PER_VERTEX * 4 // 每个顶点四个字节
     }
 
     private val vertexBuffer: FloatBuffer
-    private val colorBuffer: FloatBuffer
-    private val indexBuffer: ShortBuffer
     private val mViewMatrix = FloatArray(16)
     private val mProjectMatrix = FloatArray(16)
     private val mMVPMatrix = FloatArray(16)
     private var mProgram = 0
     private var mMatrixHandler = 0
     private var mPositionHandle = 0
-    private var mColorHandle = 0
+
+    private var mEyeX = 0f
+    private var mEyeY = 0f
+    private var mWidth = 1
+    private var mHeight = 1
+
+    fun offset(offsetX: Float, offsetY: Float) {
+        mEyeX += offsetX
+        mEyeY += offsetY
+        Log.e("blz", "内部刷新")
+    }
+
+    private lateinit var triangleCoords: FloatArray
 
     init {
-        val bb = ByteBuffer.allocateDirect(cubePositions.size * 4)
+        create(360)
+        val bb = ByteBuffer.allocateDirect(triangleCoords.size * 4)
         bb.order(ByteOrder.nativeOrder())
         vertexBuffer = bb.asFloatBuffer()
-        vertexBuffer.put(cubePositions)
+        vertexBuffer.put(triangleCoords)
         vertexBuffer.position(0)
-        val cc = ByteBuffer.allocateDirect(index.size * 2)
-        cc.order(ByteOrder.nativeOrder())
-        indexBuffer = cc.asShortBuffer()
-        indexBuffer.put(index)
-        indexBuffer.position(0)
-        val dd = ByteBuffer.allocateDirect(color.size * 4)
-        dd.order(ByteOrder.nativeOrder())
-        colorBuffer = dd.asFloatBuffer()
-        colorBuffer.put(color)
-        colorBuffer.position(0)
+    }
+
+    private fun create(count: Int) {
+        val vertexList = ArrayList<Float>()
+        val angle = 360f / count
+        var i = -90f
+        var r1: Float
+        var r2: Float
+        var h1: Float
+        var h2: Float
+        var sin: Float
+        var cos: Float
+        while (i < 90 + angle) {
+            h1 = Math.sin(i * Math.PI / 180f).toFloat()
+            h2 = Math.sin((i + angle) * Math.PI / 180f).toFloat()
+            r1 = Math.cos(i * Math.PI / 180f).toFloat()
+            r2 = Math.cos((i + angle) * Math.PI / 180f).toFloat()
+            //固定纬度，360度旋转遍历一条纬线
+            val angleD = angle * 2
+            var j = 0f
+            while (j < 360 + angle) {
+                cos = Math.cos(j * Math.PI / 180).toFloat()
+                sin = -Math.sin(j * Math.PI / 180).toFloat()
+                vertexList.add(r2 * cos)
+                vertexList.add(h2)
+                vertexList.add(r2 * sin)
+                vertexList.add(r1 * cos)
+                vertexList.add(h1)
+                vertexList.add(r1 * sin)
+                j += angleD
+            }
+            i += angle
+        }
+        triangleCoords = vertexList.toFloatArray()
     }
 
     override fun onDrawFrame(gl: GL10?) {
+//        Log.e("blz", "eyeX = ${mEyeX / mWidth}，eyeY = ${mEyeY / mHeight}")
+//        //设置透视投影
+//        Matrix.frustumM(mProjectMatrix, 0, -mRatio, mRatio, -1f, 1f, 3f, 20f)
+//        //设置相机位置
+////        Matrix.setLookAtM(mViewMatrix, 0, 3f, -10f, -4f, 0f, 0f, 0f, 0f, 1f, 0f)
+//        Matrix.setLookAtM(mViewMatrix, 0, mEyeX / mWidth, mEyeY / mHeight, 13f, 0f, 0f, 0f, 0f, 1f, 0f)
+//        //计算变换矩阵
+//        Matrix.multiplyMM(mMVPMatrix, 0, mProjectMatrix, 0, mViewMatrix, 0)
+
+        Log.e("blz", "onDrawFrame")
         //清除深度缓存
-        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         //将程序加入到OpenGLES 2.0环境
         GLES20.glUseProgram(mProgram)
         //获取变换矩阵vMatrix成员句柄
@@ -111,30 +137,31 @@ class Cube(mView: View) : BaseShape(mView) {
         GLES20.glEnableVertexAttribArray(mPositionHandle)
         //准备三角形的坐标数据
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer)
-        //获取片元着色器的vColor成员句柄
-        mColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")
-
-        //设置绘制三角形的颜色
-        GLES20.glEnableVertexAttribArray(mColorHandle)
-        GLES20.glVertexAttribPointer(mColorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer)
-        //索引法绘制正方形
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, index.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, triangleCoords.size / 3)
         //禁止顶点数组句柄
         GLES20.glDisableVertexAttribArray(mPositionHandle)
     }
 
+    var mRatio = 0f
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        Log.e("blz", "onSurfaceChanged")
+        GLES20.glViewport(0, 0, width, height)
+        mWidth = width
+        mHeight = height
+        Log.e("BLZ", "width = $width，height = $height")
         //计算宽高比
-        val ratio = width.toFloat() / height
+        mRatio = width.toFloat() / height
+
         //设置透视投影
-        Matrix.frustumM(mProjectMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 20f)
+        Matrix.frustumM(mProjectMatrix, 0, -mRatio, mRatio, -1f, 1f, 3f, 20f)
         //设置相机位置
-        Matrix.setLookAtM(mViewMatrix, 0, 5f, 5f, 10f, 0f, 0f, 0f, 0f, 1f, 0f)
+        Matrix.setLookAtM(mViewMatrix, 0, 3f, -10f, -4f, 0f, 0f, 0f, 0f, 1f, 0f)
         //计算变换矩阵
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectMatrix, 0, mViewMatrix, 0)
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        Log.e("blz", "onSurfaceCreated")
         //将背景设置为灰色
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1f)
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
