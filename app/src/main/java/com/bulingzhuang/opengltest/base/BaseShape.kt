@@ -1,4 +1,4 @@
-package com.bulingzhuang.opengltest.shape.base
+package com.bulingzhuang.opengltest.base
 
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView

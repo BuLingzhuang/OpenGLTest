@@ -4,7 +4,7 @@ import android.opengl.GLES20
 import android.opengl.Matrix
 import android.util.Log
 import android.view.View
-import com.bulingzhuang.opengltest.shape.base.BaseShape
+import com.bulingzhuang.opengltest.base.BaseShape
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer

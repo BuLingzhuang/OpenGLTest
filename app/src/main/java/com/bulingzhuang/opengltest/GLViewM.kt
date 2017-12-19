@@ -3,10 +3,8 @@ package com.bulingzhuang.opengltest
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
-import android.util.Log
 import com.bulingzhuang.opengltest.shape.Sphere
-import com.bulingzhuang.opengltest.shape.base.MyGLRender
-import com.bulingzhuang.opengltest.shape.base.BaseShape
+import com.bulingzhuang.opengltest.base.MyGLRender
 
 /**
  * ================================================
